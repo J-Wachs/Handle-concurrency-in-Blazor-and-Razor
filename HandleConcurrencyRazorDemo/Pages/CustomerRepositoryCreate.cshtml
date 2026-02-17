@@ -1,0 +1,80 @@
+﻿@page
+@model HandleConcurrencyRazorDemo.Pages.CustomerRepositoryCreateModel
+
+@{
+    ViewData["Title"] = "Customer Repository Create";
+}
+
+<style>
+    .entryform {
+        display: grid;
+        grid-template-columns: max-content auto;
+    }
+
+        .entryform > div {
+            padding: 3px;
+        }
+</style>
+
+<h1>Customer Repository Create</h1>
+
+<form class="entryform" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div>
+        <span class="text-danger">*</span>
+        <label asp-for="Entity.Name" class="control-label"></label>
+    </div>
+    <div>
+        <input asp-for="Entity.Name" class="form-control" />
+        <span asp-validation-for="Entity.Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <span class="text-danger">*</span>
+        <label asp-for="Entity.Address" class="control-label"></label>
+    </div>
+    <div>
+        <input asp-for="Entity.Address" class="form-control"/>
+        <span asp-validation-for="Entity.Address" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <span class="text-danger">*</span>
+        <label asp-for="Entity.ZipCode" class="control-label"></label>/<label asp-for="Entity.City" class="control-label"></label>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <input asp-for="Entity.ZipCode" class="form-control" />
+            <span asp-validation-for="Entity.ZipCode" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <input asp-for="Entity.City" class="form-control" />
+            <span asp-validation-for="Entity.City" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-group">
+        <span class="text-danger">*</span>
+        <label asp-for="Entity.BankAccount" class="control-label"></label>
+    </div>
+    <div>
+        <input asp-for="Entity.BankAccount" class="form-control" />
+        <span asp-validation-for="Entity.BankAccount" class="text-danger"></span>
+    </div>
+    <div>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create" class="btn btn-primary" /> <a class="btn btn-secondary" role="button" asp-page="./CustomersRepositoryGrid">Back to List</a>
+    </div>
+</form>
+
+@if (TempData[CustomerRepositoryCreateModel.Message] is not null)
+{
+    <div class="alert alert-info mt-4">
+        @TempData[CustomerRepositoryCreateModel.Message]
+    </div>
+}
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

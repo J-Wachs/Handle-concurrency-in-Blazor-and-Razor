@@ -1,0 +1,38 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Concurrency handling - demo</h1>
+
+<p>This Blazor demo site shows how to implement optimistic concurrency control in your application.</p>
+<p>This repo will be updated as the article series is published over time.</p>
+
+<p>There are following parts:</p>
+<ul>
+    <li>Customers Repository<br />The grid page calls the Customers repository class to get/maintain data. The repository uses the concurrency check build into EF
+        Core and Microsoft SQL Server (Express works as well). The locking method is optimistic</li>
+    <li>Customers API<br />The grid page calls a repository-client class that calls the Customers REST API to get/maintain data. The REST API calls the repository that uses the
+        concurrency check build into EF Core. It is actually the same repository class as above. The code in the REST API show how to handle the concurrency stamp. The locking
+        method is optimistic</li>
+</ul>
+
+<p>To see how the optimistic locking works, do the following:</p>
+<ol>
+    <li>Here in the Blazor demo, select one of the customer options in the menu to the left</li>
+    <li>Create a customer. After creation, close the dialog. You are now back on the grid page</li>
+    <li>Select the other browser, that shows the Razor demo</li>
+    <li>In the Razor demo, select one of the Customer options</li>
+    <li>When the grid is shown, click on the 'Update' button. The customer update page is shown. That it for now</li>
+    <li>Select the browser showing this Blazor demo</li>
+    <li>In the Blazor demo, click on the 'Update' button next to the customer</li>
+    <li>When the customer update popup dialog is shown, change the name of the customer, and then click 'Update', and close the dialog</li>
+    <li>In the grid, you will now see the updated name of the customer</li>
+    <li>Select the browser showing the Razor demo</li>
+    <li>It should still show the customer update page. Change the name here too. Click on the button 'Save'</li>
+    <li>You will how see an error message, stating that someone else has changed this particiluar customer, after it has been read from the database</li>
+    <li>This is the result of Optimistic locking. No data is overwritten</li>
+</ol>
+
+<p>Please note, that the two Customers grid pages are identical. The only two things changed are the '<span style="font-family: monospace;color: blueviolet">@@page</span>' tag
+    and the key for the CustomersLogic service on the '[<span style="font-family: monospace; color: green">inject</span>]' attribute.
+</p>

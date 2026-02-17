@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution items/">
+    <File Path="LockingViolation.PNG" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="HandleConcurrency/HandleConcurrency.csproj" />
+  <Project Path="HandleConcurrencyBlazorDemo/HandleConcurrencyBlazorDemo.csproj" />
+  <Project Path="HandleConcurrencyRazorDemo/HandleConcurrencyRazorDemo.csproj" />
+</Solution>

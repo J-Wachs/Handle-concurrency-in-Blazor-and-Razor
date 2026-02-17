@@ -1,0 +1,121 @@
+﻿@page
+@using System.Buffers.Binary
+@model HandleConcurrencyRazorDemo.Pages.CustomerAPIUpdateModel
+
+@{
+    ViewData["Title"] = "Customer API Update";
+}
+
+<style>
+    .entryform {
+        display: grid;
+        grid-template-columns: max-content auto;
+    }
+
+        .entryform > div {
+            padding: 3px;
+        }
+</style>
+
+<h1>Customer API Update</h1>
+
+<form class="entryform" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div>
+        <label asp-for="Entity.Id" class="control-label"></label>
+    </div>
+    <div>
+        @Model.Entity.Id
+        <input type="hidden" asp-for="Entity.Id" />
+        <input type="hidden" asp-for="Signature" />
+    </div>
+    <div>
+        <span class="text-danger">*</span>
+        <label asp-for="Entity.Name" class="control-label"></label>
+    </div>
+    <div>
+        <input asp-for="Entity.Name" class="form-control" />
+        <span asp-validation-for="Entity.Name" class="text-danger"></span>
+    </div>
+    <div>
+        <span class="text-danger">*</span>
+        <label asp-for="Entity.Address" class="control-label"></label>
+    </div>
+    <div>
+        <input asp-for="Entity.Address" class="form-control" />
+        <span asp-validation-for="Entity.Address" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <span class="text-danger">*</span>
+        <label asp-for="Entity.ZipCode" class="control-label"></label>/<label asp-for="Entity.City" class="control-label"></label>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <input asp-for="Entity.ZipCode" class="form-control" />
+            <span asp-validation-for="Entity.ZipCode" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <input asp-for="Entity.City" class="form-control" />
+            <span asp-validation-for="Entity.City" class="text-danger"></span>
+        </div>
+    </div>
+    <div>
+        <span class="text-danger">*</span>
+        <label asp-for="Entity.BankAccount" class="control-label"></label>
+    </div>
+    <div>
+        <input asp-for="Entity.BankAccount" class="form-control" />
+        <span asp-validation-for="Entity.BankAccount" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="Entity.Created" class="control-label"></label>
+    </div>
+    <div>
+        @Model.Entity.Created by @Model.Entity.CreatedBy
+        <input type="hidden" asp-for="Entity.Created" />
+        <input type="hidden" asp-for="Entity.CreatedBy" />
+    </div>
+    <div>
+        <label asp-for="Entity.Modified" class="control-label"></label>
+    </div>
+    <div>
+        @if (Model.Entity.Modified is not null)
+        {
+            <text>@Model.Entity.Modified by @Model.Entity.ModifiedBy</text>
+        }
+        else
+        {
+            <text>(Not yet modified)</text>
+        }
+        <input type="hidden" asp-for="Entity.Modified" />
+        <input type="hidden" asp-for="Entity.ModifiedBy" />
+    </div>
+    <div>
+        Record version:
+    </div>
+    <div>
+        @{
+            var rowVersion = BinaryPrimitives.ReadUInt64BigEndian(Model.Entity!.Version);
+            @rowVersion.ToString("x16") <text> (@rowVersion)</text>
+        }
+        <input type="hidden" asp-for="Entity.Version" />
+    </div>
+    <div>
+    </div>
+    <div>
+        <input type="submit" value="Save" class="btn btn-primary" /> <a class="btn btn-secondary" role="button" asp-page="./CustomersAPIGrid">Back to List</a>
+    </div>
+</form>
+
+@if (TempData[CustomerRepositoryUpdateModel.Message] is not null)
+{
+    <div class="alert alert-info mt-4">
+        @TempData[CustomerRepositoryUpdateModel.Message]
+    </div>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

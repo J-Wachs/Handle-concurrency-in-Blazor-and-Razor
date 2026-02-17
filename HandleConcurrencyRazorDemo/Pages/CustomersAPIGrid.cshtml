@@ -1,0 +1,87 @@
+﻿@page
+@model HandleConcurrencyRazorDemo.Pages.CustomersAPIGridModel
+
+@{
+    ViewData["Title"] = "Customer grid API";
+}
+
+<h1>Customers grid API</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].Id)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].Address)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].ZipCode)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].City)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].BankAccount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].Created)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].Modified)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Entity)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Address)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ZipCode)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.City)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BankAccount)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Created)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Modified)
+                </td>
+                <td>
+                    <a class="btn btn-secondary" role="button" asp-page="./CustomerAPIUpdate" asp-route-id="@item.Id">Update</a> 
+                    <a class="btn btn-secondary" role="button" asp-page="./CustomerAPIDelete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<p>
+    <a class="btn btn-secondary" role="button" asp-page="./CustomerAPICreate">Create new customer</a>
+</p>
+
+
+@if (TempData[CustomersAPIGridModel.Message] is not null)
+{
+    <div class="alert alert-info mt-4">
+        @TempData[CustomersAPIGridModel.Message]
+    </div>
+}

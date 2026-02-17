@@ -1,0 +1,218 @@
+﻿@using System.Buffers.Binary
+@using HandleConcurrency.Data
+@using HandleConcurrency.Repositories.Interfaces
+@using HandleConcurrencyBlazorDemo.Models
+@using HandleConcurrencyBlazorDemo.Utils
+
+<style>
+    .entryform {
+        display: grid;
+        grid-template-columns: max-content auto;
+    }
+
+        .entryform > div {
+            padding: 3px;
+        }
+</style>
+
+@if (_isLoading)
+{
+    <p>Loading. Please wait...</p>
+}
+else if (_dataIsPresent)
+{
+    <EditForm class="entryform" Model="entity" OnValidSubmit="@(async () => await UpsertData())">
+        <div><ValidationSummary /></div>
+        <div><DataAnnotationsValidator /></div>
+        @if (dialogMode is DialogMode.Update)
+        {
+            <div>Customer Id:</div>
+            <div>@entity!.Id</div>
+        }
+        <div>
+            <label>Name:</label>
+        </div>
+        <div>
+            <InputText @bind-Value="entity!.Name" />
+        </div>
+        <div>
+            <label>Adress:</label>
+        </div>
+        <div>
+            <InputText @bind-Value="entity.Address"></InputText>
+        </div>
+        <div>
+            <label>Zip code/City:</label>
+        </div>
+        <div>
+            <InputText @bind-Value="entity.ZipCode"></InputText> <InputText @bind-Value="entity.City"></InputText>
+        </div>
+        <div>
+            <label>Bank Account:</label>
+        </div>
+        <div>
+            <InputNumber @bind-Value="entity.BankAccount"></InputNumber>
+        </div>
+        @if (dialogMode is DialogMode.Update)
+        {
+            <div>Created:</div>
+            <div>@entity!.Created by @entity.CreatedBy</div>
+            <div>Last modified:</div>
+            <div>
+                @if (entity!.Modified is not null)
+                {
+                    @entity!.Modified<text> by </text> @entity!.ModifiedBy
+                }
+                else
+                {
+                    <text>(Not modified yet)</text>
+                }
+            </div>
+            <div>
+                Record version:
+            </div>
+            <div>
+                @{
+                    var rowVersion = BinaryPrimitives.ReadUInt64BigEndian(entity!.Version);
+                    @rowVersion.ToString("x16")
+        
+                    <text> (@rowVersion)</text>
+                }
+            </div>
+        }
+        <div>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">
+                @if (dialogMode is DialogMode.Insert)
+                {
+                    <text>Create</text>
+                }
+                else
+                {
+                    <text>Save</text>
+                }
+            </button>
+        </div>
+    </EditForm>
+}
+
+@if (!string.IsNullOrEmpty(_message))
+{
+    <div class="alert alert-info mt-4">
+        @_message
+    </div>
+}
+
+@code {
+    [Parameter]
+    public long EntityId { get; set; }
+
+    [Parameter]
+    public required IOptimisticConcurrencyRepository<Customer> Repository { get; set; }
+
+    [SupplyParameterFromForm]
+    public Customer? entity { get; set; }
+
+    private DialogMode dialogMode;
+    private bool _isLoading = true;
+    private bool _dataIsPresent = false;
+    private string _message = string.Empty;
+    private const string _userName = "Blazor page";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender is true)
+        {
+            dialogMode = EntityId is 0 ? DialogMode.Insert : DialogMode.Update;
+            await LoadDataAsync();
+            _isLoading = false;
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    /// <summary>
+    /// Fetch data to be maintained in the dialog
+    /// </summary>
+    /// <returns>The requested data</returns>
+    private async Task LoadDataAsync()
+    {
+        _dataIsPresent = false;
+        _message = string.Empty;
+
+        if (dialogMode is DialogMode.Update)
+        {
+            var result = await Repository.GetByIdAsync(EntityId);
+            if (result.IsSuccess)
+            {
+                entity = result.Data;
+                _dataIsPresent = true;
+            }
+            else
+            {
+                entity = new();
+            }
+            _message = result.FormatMessages();
+        }
+        else
+        {
+            _dataIsPresent = true;
+            entity = new();
+        }
+    }
+
+    /// <summary>
+    /// Route flow to relevant method.
+    /// </summary>
+    /// <returns></returns>
+    private async Task UpsertData()
+    {
+        if (dialogMode is DialogMode.Insert)
+        {
+            await InsertData();
+        }
+        else
+        {
+            await UpdateData();
+        }
+    }
+
+    /// <summary>
+    /// Handle adding a new entity.
+    /// </summary>
+    /// <returns></returns>
+    private async Task InsertData()
+    {
+        var result = await Repository.AddAsync(entity!, _userName);
+        if (result.IsSuccess)
+        {
+            entity = result.Data!;
+            EntityId = entity.Id;
+            _message = $"Customer {EntityId} created.";
+        }
+        else
+        {
+            _message = result.FormatMessages();
+        }
+    }
+
+    /// <summary>
+    /// Handle updating an existing entity.
+    /// </summary>
+    /// <returns></returns>
+    private async Task UpdateData()
+    {
+        var result = await Repository.UpdateAsync(entity!, _userName);
+        if (result.IsSuccess)
+        {
+            entity = result.Data!;
+            _message = $"Customer {EntityId} updated.";
+        }
+        else
+        {
+            _message = result.FormatMessages();
+        }
+    }
+}
