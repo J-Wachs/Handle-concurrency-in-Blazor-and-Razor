@@ -14,6 +14,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddKeyedScoped<IOptimisticConcurrencyRepository<Customer>, CustomerRepository>("customerrepository");
 builder.Services.AddKeyedScoped<IOptimisticConcurrencyRepository<Customer>, CustomerRepositoryClient>("customerrepositoryclient");
 
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
 // This way of added the interface and the implementation of the class, makes runtime 
 // create the specific instance of the class, when the DI system 'sees' that I have put
 // e.g. IAPIQueryParser<Customer> or IAPIQueryParser<Product> in classes. They could be 

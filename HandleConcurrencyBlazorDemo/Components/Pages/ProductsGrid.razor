@@ -1,0 +1,226 @@
+﻿@page "/productsgrid"
+@using HandleConcurrency.Repositories.Interfaces
+@using HandleConcurrencyBlazorDemo.Utils
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Entity = HandleConcurrency.Data.Product
+@attribute [StreamRendering]
+
+<PageTitle>Products grid Repository</PageTitle>
+
+<h1>Products grid Repository</h1>
+
+<QuickGrid ItemsProvider="_dataProvider" @ref="grid">
+    <PropertyColumn Property="@(p => p.Id)" Sortable="true" />
+    <PropertyColumn Property="@(p => p.Name)" Sortable="true" />
+    <PropertyColumn Property="@(p => p.ItemsInStock)" Sortable="true" />
+    <PropertyColumn Property="@(p => p.ItemsInOrder)" Sortable="true" />
+    <PropertyColumn Property="@(p => p.Created)" Sortable="true" />
+    <PropertyColumn Property="@(p => p.Modified)" Sortable="true" />
+    <TemplateColumn Context="entity">
+        <button class="btn btn-secondary" @onclick="() => Update(entity.Id)">Update</button>
+        <button class="btn btn-secondary" @onclick="() => UpdateInfo(entity.Id)">Update info</button>
+        <button class="btn btn-secondary" @onclick="() => UpdateQty(entity.Id)">Update quantities</button>
+        <button class="btn btn-secondary" @onclick="async () => await Delete(entity)">Delete</button>
+    </TemplateColumn>
+</QuickGrid>
+<button class="btn btn-secondary" @onclick="Create">Create new @EntityNameSingular</button>
+
+<ModalDialog @ref="modalDialog" OnClose="OnClosePopup" Title="@_modalDialogTitle">
+    <ProductUpsertDialog EntityId="@_entityId" Repository="repository">
+    </ProductUpsertDialog>
+</ModalDialog>
+
+<ModalDialog @ref="modalDialogInfo" OnClose="OnClosePopup" Title="@_modalDialogInfoTitle">
+    <ProductEditInfoDialog EntityId="@_entityId" Repository="repository">        
+    </ProductEditInfoDialog>
+</ModalDialog>
+
+<ModalDialog @ref="modalDialogQty" OnClose="OnClosePopup" Title="@_modalDialogQtyTitle">
+    <ProductEditQuantitiesDialog EntityId="@_entityId" Repository="repository">
+    </ProductEditQuantitiesDialog>
+</ModalDialog>
+
+
+@if (!string.IsNullOrEmpty(_message))
+{
+    <div class="alert alert-info mt-4">
+        @_message
+    </div>
+}
+
+
+@code {
+    [Inject]
+    public required IProductRepository repository { get; set; }
+
+    [Inject]
+    IJSRuntime? JSRuntime { get; set; }
+
+    private const string EntityNameSingular = "product";
+    private const string _userName = "Blazor page";
+    private const int FirstPage = 1;
+    private const int PageSize100 = 100;
+
+    private string _message { get; set; } = string.Empty;
+    private string _modalDialogTitle = string.Empty;
+    private string _modalDialogInfoTitle = string.Empty;
+    private string _modalDialogQtyTitle = string.Empty;
+    private long _entityId = 0;
+
+    private GridItemsProvider<Entity>? _dataProvider { get; set; }
+    private QuickGrid<Entity>? grid { get; set; }
+    private ModalDialog? modalDialog { get; set; }
+    private ModalDialog? modalDialogInfo { get; set; }
+    private ModalDialog? modalDialogQty { get; set; }
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dataProvider = LoadData;
+            StateHasChanged();
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    /// <summary>
+    /// Adapt the sorting to repository rules and get data.
+    /// </summary>
+    /// <param name="request">GridItemProviderRequest with information about what data to load</param>
+    /// <returns>The requested data</returns>
+    private async ValueTask<GridItemsProviderResult<Entity>> LoadData(GridItemsProviderRequest<Entity> request)
+    {
+        _message = "Loading data. Please wait...";
+        StateHasChanged();
+        await Task.Delay(100); // Allow for UI to update
+
+        GridItemsProviderResult<Entity> dataToReturn = default;
+
+        var sorting = QuickGridSortConverter.ToSortDescriptors(request.GetSortByProperties());
+
+        var resultGetAll = await repository.GetAsync(x => true, sorting, FirstPage, PageSize100);
+        if (resultGetAll is not null)
+        {
+            if (resultGetAll.Data is not null)
+            {
+                dataToReturn = new()
+                {
+                    Items = resultGetAll.Data,
+                    TotalItemCount = resultGetAll.Data.Count
+                };
+            }
+            else
+            {
+                dataToReturn = new()
+                {
+                    Items = [],
+                    TotalItemCount = 0
+                };
+            }
+            _message = resultGetAll.FormatMessages();
+        }
+        else
+        {
+            _message = "GetAll API did not return anything.";
+        }
+        StateHasChanged();
+        return dataToReturn;
+    }
+
+    /// <summary>
+    /// Open Upsert dialog in create mode.
+    /// </summary>
+    private void Create()
+    {
+        _entityId = 0;
+        if (modalDialog is not null)
+        {
+            _modalDialogTitle = $"Create {EntityNameSingular}";
+            modalDialog.Open();
+        }
+    }
+
+    /// <summary>
+    /// Open Upsert dialog in update mode.
+    /// </summary>
+    /// <param name="id"></param>
+    private void Update(long id)
+    {
+        _entityId = id;
+        if (modalDialog is not null)
+        {
+            _modalDialogTitle = $"Update {EntityNameSingular}";
+            modalDialog.Open();
+        }
+    }
+
+    /// <summary>
+    /// Open Update dialog for fields in info section.
+    /// </summary>
+    /// <param name="id"></param>
+    private void UpdateInfo(long id)
+    {
+        _entityId = id;
+        if (modalDialogInfo is not null)
+        {
+            _modalDialogInfoTitle = $"Update {EntityNameSingular} info";
+            modalDialogInfo.Open();
+        }
+    }
+
+    /// <summary>
+    /// Open Update dialog for fields in quantity section.
+    /// </summary>
+    /// <param name="id"></param>
+    private void UpdateQty(long id)
+    {
+        _entityId = id;
+        if (modalDialogQty is not null)
+        {
+            _modalDialogQtyTitle = $"Update {EntityNameSingular} quantities";
+            modalDialogQty.Open();
+        }
+    }
+
+    /// <summary>
+    /// Delete the selected entity.
+    /// </summary>
+    /// <param name="entity">The entity to delete</param>
+    /// <returns></returns>
+    private async Task Delete(Entity entity)
+    {
+        if (await ConfirmDialog($"Do you really want to delete {EntityNameSingular} {entity.Id}") is true)
+        {
+            var result = await repository.DeleteAsync(entity);
+            if (result.IsSuccess)
+            {
+                await grid!.RefreshDataAsync();
+            }
+            _message = result.FormatMessages();
+        }
+    }
+
+    /// <summary>
+    /// Callback method when popup closes.
+    /// </summary>
+    /// <returns></returns>
+    private async Task OnClosePopup()
+    {
+        await grid!.RefreshDataAsync();
+    }
+
+    /// <summary>
+    /// Wrapper to call 'confirm' JavaScript dialogbox.
+    /// </summary>
+    /// <param name="message">The message to display in the dialog</param>
+    /// <returns></returns>
+    private async Task<bool> ConfirmDialog(string message)
+    {
+        if (JSRuntime is not null)
+        {
+            return await JSRuntime.InvokeAsync<bool>("confirm", $"{message}");
+        }
+        return false;
+    }
+}

@@ -21,9 +21,33 @@
         method is optimistic<br />
         <strong>Please note</strong> that this demo require that you have started the Blazor demo as well. The API is hosted in the Blazor demo
     </li>
+    <li>
+        Products<br />Shows how to manually handle concurrcncy check. Here in Microsoft SQL Server, and it is the same method for databases that do not have build-in concurrency
+        check. This demo also shows you how to handle concurrency check for subsets of fields. The locking method is optimistic
+    </li>
+
 </ul>
 
-<p>To see how the optimistic locking works, do the following:</p>
+<p>To see how the advanced optimistic locking for a subset of fields for Products works, do the following:</p>
+<ol>
+    <li>Here in the Razor demo, select Products options in the menu above</li>
+    <li>Create a product. After creation, click on the button 'Back to list'. You are now back on the grid page</li>
+    <li>Then, click on the 'Update info' button</li>
+    <li>When the page with the information is shown, select the other browser, that shows the Blazor demo</li>
+    <li>In the Blazor demo, select the Products option</li>
+    <li>When the grid is shown, click on the 'Update quantity' button. The product quantity update dialog box is shown. That it for now</li>
+    <li>Select the browser showing this Razor demo</li>
+    <li>Change the name of the product, and click on the 'Save' button</li>
+    <li>Select the browser showing the Blazor demo</li>
+    <li>It should still show the update quantity dialog box. Change one of the quantity fields, and click on the 'Save' button</li>
+    <li>No error message is show, as the Info field and the Quantity fields are handled by two separate Concurrency Tokens</li>
+    <li>Try to call up the Info update page/dialog box in both this Razor demo, and the Blazor demo</li>
+    <li>Change in one of the demos, click 'Save' and select the other browser, and change here too</li>
+    <li>An error message is displayed, that someone has change the Info fields after you read the information</li>
+    <li>This is the result of Advanced Optimistic locking. No data is overwritten is the subset of fields</li>
+</ol>
+
+<p>To see how the optimistic locking for Customers works, do the following:</p>
 <ol>
     <li>Here in the Razor demo, select one of the customer options in the menu above</li>
     <li>Create a customer. After creation, close the dialog. You are now back on the grid page</li>

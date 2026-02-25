@@ -1,0 +1,88 @@
+﻿@page
+@model HandleConcurrencyRazorDemo.Pages.ProductsGridModel
+
+@{
+    ViewData["Title"] = "Products grid Repository";
+}
+
+<h1>Products grid Repository</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].Id)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].VersionInfo)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].ItemsInStock)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].ItemsInOrder)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].VersionQuantities)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].Created)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Entity[0].Modified)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Entity)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.VersionInfo)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ItemsInStock)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ItemsInOrder)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.VersionQuantities)
+                </td>
+                <td title="By @item.CreatedBy">
+                    @Html.DisplayFor(modelItem => item.Created)
+                </td>
+                <td title="By @item.ModifiedBy">
+                    @Html.DisplayFor(modelItem => item.Modified)
+                </td>
+                <td>
+                    <a class="btn btn-secondary" role="button" asp-page="./ProductUpdate" asp-route-id="@item.Id">Update</a>
+                    <a class="btn btn-secondary" role="button" asp-page="./ProductUpdateInfo" asp-route-id="@item.Id">Update info</a>
+                    <a class="btn btn-secondary" role="button" asp-page="./ProductUpdateQty" asp-route-id="@item.Id">Update quantities</a>
+                    <a class="btn btn-secondary" role="button" asp-page="./ProductDelete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<p>
+    <a class="btn btn-secondary" role="button" asp-page="./ProductCreate">Add new product</a>
+</p>
+
+@if (TempData[ProductsGridModel.Message] is not null)
+{
+    <div class="alert alert-info mt-4">
+        @TempData[ProductsGridModel.Message]
+    </div>
+}

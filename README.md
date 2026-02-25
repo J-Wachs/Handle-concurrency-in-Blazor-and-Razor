@@ -27,16 +27,19 @@ concurrency.
 The two demo web sites covers how to implement 'optimistic' locking of records 
 in a Blazor or Razor web application, as well as in a REST API.
 
+The repo also shows how to implement 'optimistic' locking for a subset of fields in a table record (see Product and
+associated classes).
+
 The projects must use Microsoft SQL Server (Express works as well).
 
 ### Up and running
 To get the demo up and running, you must download this repo.
 
-You must then renamed the two 'appsettigs.Development.json.example' files to 'appsettings.Development.json' and edit
+You must then rename the two 'appsettigs.Development.json.example' files to 'appsettings.Development.json' and edit
 them so that the connection string points to your SQL (Express) Server. The two files are located in the Blazor demo and
 in the Razor demo.
 
-First time you must run the demo application, the database and tables will be created, as the project is made as 'Code
+First time you run the demo application, the database and tables will be created, as the project is made as 'Code
 First' and the needed code to automatically handle migrations is included in the Program.cs in the Razor demo web site
 project.
 
@@ -59,7 +62,7 @@ Not implementing one of them result in what is called 'Last In Wins'.
 the data changes. This is the way it works 'out of the box', no special steps are needed. Depending on what the application
 does and what data is stored in the record, this could fit the need, or cause severe lost of data.
 
-The optimistic control (which it the metod shown here in the first version of the repo) works in the way that when a user
+The optimistic control works in the way that when a user
 is about to store the changed data, it is checked, if the data has been changed in the time window from when it was read
 and until it is to be updated. This is done by verifying (by SQL Server or in code) that the concurrency stamp in the
 record still contains the same value as when the data was read. If the concurrency stamp is still the same, the record is
@@ -78,6 +81,10 @@ right solution.
 
 For the optimistic and pessimistic methods discussed above to work, it require that you as the developer add the concurrency
 stamp field (for optimistic locking) or implement transactions and locking in your code.
+
+Please note, as the optimistic control for subsets of fields are handled manually,
+EF Core does not throw exceptions when a conflict occur. It is handled in code, and 
+an error message is returned to the caller.
 
 ### When to select optimistic and pessimistic locking
 Which one of the two you should select in a specific case depends of the case and how you plan to implement the
@@ -227,27 +234,31 @@ REST API example, this is done by sending and receiving a custom header with the
 
 ## Table abstractions
 
-There is one abstraction that your tables must inherit from. To provide the primary key and fields for who and
+There are two abstractions that your tables must inherit from. To provide the primary key and fields for who and
 when records was created and updated, AND to add the concurrency token (to give optimistic concurrency control)
-inherit from 'AbstractOptimisticConcurrencyTable' (See the Customer table class in the repo).
+inherit from 'AbstractOptimisticConcurrencyTable' (See the Customer table class in the repo). Tables
+that are to use the optimistic locking for subsets of fields, must inherit from 'AbstractBaseTable'.
+See 'Product.cs' for details.
 
-The repository abstractions rely on these abstractions.
+The repository abstractions rely on these abstractions. Look at the entify entity classes for more information.
 
 ## Repository abstractions
 
 The included abstractions makes it easy for you to start using concurrency control in your own applications. Decide
-what type of concurrency control to use (at this stage the repo only contains abstraction for optimistic control), and
-then copy the necessary abstractions to your own project. Then adapt the abstraction to fit your needs. Adding authority
+what type of concurrency control to use (at this stage the repo only contains abstractions for optimistic control), and
+then copy the necessary abstractions to your own project. Then adapt the abstractions to fit your needs. Adding authority
 is one good example.
 
 Please note, to use optimistic concurrency, you will have to add the concurrency token to your table(s). Look at the
-Customer class in 'HandleConcurrency/Data'.
+Customer and Product classes in 'HandleConcurrency/Data'.
 
 Inheritance paths:
 
 | Abstraction | Description |
 | --- | --- |
 | AbstractBaseRepository | Contains retrieval methods |
+| +- AbstractBaseRepositoryWithLockTimeout | Adds method for time out |
+| !&nbsp;&nbsp;&nbsp; +- AbstractManualConcurrencyRespository | Adds methods for manually handling concurrency control |
 | +- AbstractOptimisticConcurrencyRepository | Add methods for optimistic concurrency control |
 
 Later this table will get updated, as more abstractions are added to the repo.
@@ -256,12 +267,28 @@ Later this table will get updated, as more abstractions are added to the repo.
 
 When you look at the CustomerRepository.cs you will see that it consist only of code that ensures the correct inheritance.
 All the code that provides the core functionality is contained in the abstractions.
+The ProductRepository.cs shows what is needed to implement advanced concurrency control. The abstraction provides
+methods for updating the entire record, and the implementation contains methods needed to maintain the two sections
+in the product record.
 
 ## Customer REST API
 
 For the Customer entity, a REST API is implemented. The controller is located in the folder 
 'HandleConcurrency\HandleConcurrencyBlazorDemo\Controllers'.
 Everything releated to this controller, besides the repository class, is located under this folder.
+
+### Mapping of Customer DTO Classes
+
+The two DTO classes (under Blazor Demo -> Controllers) has been extended with '... implicit operator ...' methods
+that allows for assigning the DTO object into the Customer object.
+
+Further, the DTO classes contains the method 'MergeTo()' that updates a Customer object with the values from
+the DTO class. This makes the controller class simpler as the concerns are separated.
+
+### Mapping of Product DTO Classes
+
+The two DTO classes (HadleConcurrency/Data/DTOs) has been extended with '... implicit operator ...' methods
+that allows for assigning the Product object into the DTO object.
 
 ## Notes about Razor pages
 

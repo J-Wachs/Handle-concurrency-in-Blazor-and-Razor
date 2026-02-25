@@ -1,0 +1,147 @@
+﻿@using HandleConcurrency.Data.DTOs
+@using HandleConcurrency.Repositories.Interfaces
+@using System.Buffers.Binary
+
+<style>
+    .entryform {
+        display: grid;
+        grid-template-columns: max-content auto;
+    }
+
+        .entryform > div {
+            padding: 3px;
+        }
+</style>
+
+@if (_isLoading)
+{
+    <p>Loading. Please wait...</p>
+}
+else if (_dataIsPresent)
+{
+    <EditForm class="entryform" Model="productQty" OnValidSubmit="@(async () => await UpdateData())">
+        <div><ValidationSummary /></div>
+        <div><DataAnnotationsValidator /></div>
+        <div>Product Id:</div>
+        <div>@productQty!.Id</div>
+        <div>
+            <label>In stock:</label>
+        </div>
+        <div>
+            <InputNumber @bind-Value="productQty.ItemsInStock"></InputNumber>
+        </div>
+        <div>
+            <label>In order:</label>
+        </div>
+        <div>
+            <InputNumber @bind-Value="productQty.ItemsInOrder"></InputNumber>
+        </div>
+        <div>Created:</div>
+        <div>@productQty!.Created by @productQty.CreatedBy</div>
+        <div>Last modified:</div>
+        <div>
+            @if (productQty!.Modified is not null)
+            {
+                @productQty!.Modified <text> by </text> @productQty!.ModifiedBy
+            }
+            else
+            {
+                <text>(Not modified yet)</text>
+            }
+        </div>
+        <div>
+            Area version:
+        </div>
+        <div>
+            @productQty.VersionQuantities
+        </div>
+        <div>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </EditForm>
+}
+
+@if (!string.IsNullOrEmpty(_message))
+{
+    <div class="alert alert-info mt-4">
+        @_message
+    </div>
+}
+
+@code {
+    [Parameter]
+    public long EntityId { get; set; }
+
+    [Parameter]
+    public required IProductRepository Repository { get; set; }
+
+    [SupplyParameterFromForm]
+    public ProductQtyDTO? productQty { get; set; }
+
+    private bool _isLoading = true;
+    private bool _dataIsPresent = false;
+    private string _message = string.Empty;
+    private const string _userName = "Blazor page";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender is true)
+        {
+            await LoadDataAsync();
+            _isLoading = false;
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    /// <summary>
+    /// Fetch data to be maintained in the dialog
+    /// </summary>
+    /// <returns>The requested data</returns>
+    private async Task LoadDataAsync()
+    {
+        _dataIsPresent = false;
+        _message = string.Empty;
+
+        if (EntityId is not 0)
+        {
+            var result = await Repository.GetByIdAsync(EntityId);
+            if (result.IsSuccess)
+            {
+                var data = result.Data;
+                productQty = result.Data!;
+                _dataIsPresent = true;
+            }
+            else
+            {
+                productQty = new();
+                _message = result.FormatMessages();
+            }
+        }
+        else
+        {
+            _message = $"This dialog must be called with a product Id in the field Product Id.";
+        }
+    }
+
+    /// <summary>
+    /// Update section fields.
+    /// </summary>
+    /// <returns></returns>
+    private async Task UpdateData()
+    {
+        var result = await Repository.UpdateQuantitiesAsync(productQty!, _userName);
+        if (result.IsSuccess)
+        {
+            productQty = result.Data!;
+            _message = $"Product {EntityId} updated.";
+        }
+        else
+        {
+            _message = result.FormatMessages();
+        }
+    }
+}

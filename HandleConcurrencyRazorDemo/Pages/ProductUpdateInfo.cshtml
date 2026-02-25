@@ -1,0 +1,88 @@
+﻿@page
+@model HandleConcurrencyRazorDemo.Pages.ProductUpdateInfoModel
+
+@{
+    ViewData["Title"] = "Product Update Info";
+}
+
+<h1>Product Update Info</h1>
+
+<style>
+    .entryform {
+        display: grid;
+        grid-template-columns: max-content auto;
+    }
+
+        .entryform > div {
+            padding: 3px;
+        }
+</style>
+
+<form class="entryform" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div></div>
+    <div>
+        <label asp-for="Entity.Id" class="control-label"></label>
+    </div>
+    <div>
+        <input type="hidden" asp-for="Entity.Id" />
+        <input type="hidden" asp-for="Signature" />
+        @Model.Entity.Id
+    </div>
+    <div>
+        <label asp-for="Entity.Name" class="control-label"></label>
+        </div>
+        <div>
+        <input asp-for="Entity.Name" class="form-control" />
+        <span asp-validation-for="Entity.Name" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="Entity.VersionInfo" class="control-label"></label>
+    </div>
+    <div>
+        <input type="hidden" asp-for="Entity.VersionInfo" />
+        @Model.Entity.VersionInfo
+    </div>
+    <div>
+        <label asp-for="Entity.Created" class="control-label"></label>
+    </div>
+    <div>
+        <input type="hidden" asp-for="Entity.Created" />
+        <input type="hidden" asp-for="Entity.CreatedBy" />
+        @Model.Entity.Created by @Model.Entity.CreatedBy
+    </div>
+    <div>
+        <label asp-for="Entity.Modified" class="control-label"></label>
+    </div>
+    <div>
+        <input type="hidden" asp-for="Entity.Modified" />
+        <input type="hidden" asp-for="Entity.ModifiedBy" />
+        @if (Model.Entity.Modified is null)
+        {
+            <text>(Not modified yet)</text>
+        }
+        else
+        {
+            <text>@Model.Entity.Modified by @Model.Entity.ModifiedBy</text>
+        }
+    </div>
+    <div>
+
+    </div>
+    <div>
+        <input type="submit" value="Save" class="btn btn-primary" /> <a class="btn btn-secondary" role="button" asp-page="./ProductsGrid">Back to List</a>
+    </div>
+</form>
+
+@if (TempData[ProductUpdateInfoModel.Message] is not null)
+{
+    <div class="alert alert-info mt-4">
+        @TempData[ProductUpdateInfoModel.Message]
+    </div>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
